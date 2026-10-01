@@ -438,9 +438,6 @@ button,input,textarea{font-size:16px}
   .cta:hover,#cam:hover,#play:hover,#eb:hover,.keys button:hover{transform:none;box-shadow:none}
 }
 @media (prefers-reduced-motion:reduce){scroll-behavior:auto}
-
-/* Final presentation mode: hide the editor trigger. */
-#eb{display:none!important}
 </style>
 </head>
 <body class="locked">
@@ -553,6 +550,7 @@ button,input,textarea{font-size:16px}
 </main>
 
 <div id="lb"></div>
+<button id="eb"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>Edit</button>
 <div id="edBg"></div>
 <aside id="ed" aria-label="Editor">
 <h3>Customize your website</h3>
@@ -671,63 +669,45 @@ let shown=0,wishSeen=false,typeTok=0;
 /* ---------- replayable mobile text animations ---------- */
 const mobileSlideVisible={noteS:false,finS:false};
 function forceReflow(el){if(el)void el.offsetWidth;}
-function cancelElementAnimations(el){
-  try{if(el&&el.getAnimations)el.getAnimations().forEach(a=>a.cancel())}catch(e){}
-}
-function animateMobileText(el,delay,duration=900,dy=18){
-  if(!el)return;
-  cancelElementAnimations(el);
-  el.style.opacity='0';
-  el.style.transform=`translate3d(0,${dy}px,0)`;
-  if(typeof el.animate==='function'){
-    const a=el.animate(
-      [{opacity:0,transform:`translate3d(0,${dy}px,0)`},{opacity:1,transform:'translate3d(0,0,0)'}],
-      {duration,delay,easing:'cubic-bezier(.22,.8,.2,1)',fill:'forwards'}
-    );
-    a.onfinish=()=>{el.style.opacity='1';el.style.transform='none'};
-  }else{
-    el.style.transition=`opacity ${duration}ms cubic-bezier(.22,.8,.2,1), transform ${duration}ms cubic-bezier(.22,.8,.2,1)`;
-    setTimeout(()=>{el.style.opacity='1';el.style.transform='none'},delay);
-  }
-}
 function resetMobileNoteText(){
   const sec=$('#noteS'),paper=$('#paper'),lines=$$('#noteTxt .ln'),sg=paper?.querySelector('.sg');
   if(!sec)return;
   sec.classList.remove('mobile-note-motion','note-ready');
   paper?.classList.remove('done');
-  lines.forEach(el=>{cancelElementAnimations(el);el.style.removeProperty('opacity');el.style.removeProperty('transform');el.style.removeProperty('transition');el.style.removeProperty('animation');el.style.removeProperty('-webkit-animation')});
-  if(sg){cancelElementAnimations(sg);sg.style.removeProperty('opacity');sg.style.removeProperty('transform');sg.style.removeProperty('transition');sg.style.removeProperty('animation');sg.style.removeProperty('-webkit-animation')}
+  lines.forEach(el=>{
+    el.style.removeProperty('opacity');
+    el.style.removeProperty('transform');
+    el.style.removeProperty('animation');
+    el.style.removeProperty('-webkit-animation');
+  });
+  if(sg){sg.style.removeProperty('opacity');sg.style.removeProperty('animation');sg.style.removeProperty('-webkit-animation');}
 }
 function replayMobileNoteText(){
-  const sec=$('#noteS'),paper=$('#paper'),lines=$$('#noteTxt .ln'),sg=paper?.querySelector('.sg');
+  const sec=$('#noteS'),paper=$('#paper'),lines=$$('#noteTxt .ln');
   if(!sec||!paper||!lines.length)return;
   resetMobileNoteText();
   paper.style.setProperty('--note-lines',lines.length);
   forceReflow(sec);
-  requestAnimationFrame(()=>{
-    lines.forEach((el,i)=>animateMobileText(el,180+i*260,820,14));
-    if(sg)animateMobileText(sg,180+lines.length*260,900,12);
-    sec.classList.add('mobile-note-motion');
-  });
+  // Two frames make Safari/Chrome mobile reliably register a fresh animation.
+  requestAnimationFrame(()=>requestAnimationFrame(()=>sec.classList.add('mobile-note-motion')));
 }
 function resetMobileFinalText(){
   const sec=$('#finS'); if(!sec)return;
   sec.classList.remove('mobile-final-motion');
-  $$('.fin .fx1,.fin .fx2,.fin .fx3').forEach(el=>{cancelElementAnimations(el);el.style.removeProperty('opacity');el.style.removeProperty('transform');el.style.removeProperty('transition');el.style.removeProperty('animation');el.style.removeProperty('-webkit-animation')});
+  $$('.fin .fx1,.fin .fx2,.fin .fx3').forEach(el=>{
+    el.style.removeProperty('opacity');
+    el.style.removeProperty('transform');
+    el.style.removeProperty('animation');
+    el.style.removeProperty('-webkit-animation');
+  });
 }
 function replayMobileFinalText(){
   const sec=$('#finS'); if(!sec)return;
   resetMobileFinalText();
   const els=[sec.querySelector('.fx1'),sec.querySelector('.fx2'),sec.querySelector('.fx3')].filter(Boolean);
+  els.forEach((el,i)=>el.style.setProperty('--mobile-final-delay',[.35,1.35,2.45][i]+'s'));
   forceReflow(sec);
-  requestAnimationFrame(()=>{
-    els.forEach((el,i)=>{
-      const d=[350,1350,2450][i];
-      el.style.setProperty('--mobile-final-delay',(d/1000)+'s');
-      animateMobileText(el,d,950,20);
-    });
-    sec.classList.add('mobile-final-motion');
-  });
+  requestAnimationFrame(()=>requestAnimationFrame(()=>sec.classList.add('mobile-final-motion')));
 }
 
 /* ---------- reveal observers ---------- */
@@ -817,7 +797,7 @@ function drawGrid(all){
  const g=$('#grid');g.innerHTML='';typeTok++;
  S.photos.slice(0,shown).forEach((p,i)=>{const d=document.createElement('div'),last=!all&&i===shown-1;d.className='pol'+(last?' new':'');d.style.setProperty('--r',(i%2?1:-1)*(2+i%3*2)+'deg');d.innerHTML='<img alt=""><p></p>';d.querySelector('img').src=p.src;
   const cp=d.querySelector('p');if(last)typeWrite(cp,p.cap);else cp.textContent=p.cap;d.onclick=()=>zoom(p);g.append(d)});
- const n=S.photos.length-shown;$('#left').textContent=!S.photos.length?'Add photos in the editor':n>0?`Tap the camera · ${n} ${n==1?'memory':'memories'} left`:'every memory revealed';
+ const n=S.photos.length-shown;$('#left').textContent=!S.photos.length?'Add photos with the Edit button':n>0?`Tap the camera · ${n} ${n==1?'memory':'memories'} left`:'every memory revealed';
 }
 function typeWrite(el,t){const k=typeTok;el.textContent='';let i=0;setTimeout(function f(){if(k!==typeTok)return;if(i<t.length){el.textContent=t.slice(0,++i);setTimeout(f,45)}},900)}
 $('#cam').onclick=()=>{if(shown>=S.photos.length)return;playCameraSfx();const c=$('#cam');c.classList.remove('push');void c.offsetWidth;c.classList.add('push');
