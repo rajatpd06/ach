@@ -262,6 +262,62 @@ section.in .page-banner,body.open #hero .page-banner{animation:bannerIn 1.15s va
 @media (max-width:520px){.page-banner{font-size:clamp(42px,14vw,66px);margin-bottom:12px}.banner-decor{font-size:clamp(24px,8vw,38px);gap:10px}}
 @media (prefers-reduced-motion:reduce){.page-banner{opacity:1;transform:none}.banner-decor span{animation:none}}
 
+/* ---------- mobile-safe text animation fix ---------- */
+@media (max-width:699px){
+  /* Use a dedicated animation path for the Note text so it does not depend
+     on IntersectionObserver timing or the device's animation preferences. */
+  #noteS.mobile-note-motion #noteTxt .ln{
+    opacity:0;
+    transform:translate3d(0,14px,0);
+    filter:none;
+    animation:mobileNoteLineIn .82s cubic-bezier(.22,.8,.2,1) calc(.18s + var(--i)*.26s) both !important;
+    -webkit-animation:mobileNoteLineIn .82s cubic-bezier(.22,.8,.2,1) calc(.18s + var(--i)*.26s) both !important;
+    will-change:opacity,transform;
+  }
+  #noteS.mobile-note-motion .sg{
+    opacity:0;
+    animation:mobileNoteSignIn .9s cubic-bezier(.22,.8,.2,1) calc(.18s + var(--note-lines)*.26s) both !important;
+    -webkit-animation:mobileNoteSignIn .9s cubic-bezier(.22,.8,.2,1) calc(.18s + var(--note-lines)*.26s) both !important;
+  }
+  @keyframes mobileNoteLineIn{
+    from{opacity:0;transform:translate3d(0,14px,0)}
+    to{opacity:1;transform:translate3d(0,0,0)}
+  }
+  @-webkit-keyframes mobileNoteLineIn{
+    from{opacity:0;-webkit-transform:translate3d(0,14px,0)}
+    to{opacity:1;-webkit-transform:translate3d(0,0,0)}
+  }
+  @keyframes mobileNoteSignIn{
+    from{opacity:0;transform:translate3d(0,12px,0)}
+    to{opacity:1;transform:translate3d(0,0,0)}
+  }
+  @-webkit-keyframes mobileNoteSignIn{
+    from{opacity:0;-webkit-transform:translate3d(0,12px,0)}
+    to{opacity:1;-webkit-transform:translate3d(0,0,0)}
+  }
+
+  /* Final slide: use the same explicit replayable animation path. */
+  #finS.mobile-final-motion .fx1,
+  #finS.mobile-final-motion .fx2,
+  #finS.mobile-final-motion .fx3{
+    opacity:0;
+    transform:translate3d(0,20px,0);
+    filter:none;
+    animation:mobileFinalLineIn .95s cubic-bezier(.22,.8,.2,1) var(--mobile-final-delay) both !important;
+    -webkit-animation:mobileFinalLineIn .95s cubic-bezier(.22,.8,.2,1) var(--mobile-final-delay) both !important;
+    will-change:opacity,transform;
+  }
+  @keyframes mobileFinalLineIn{
+    from{opacity:0;transform:translate3d(0,20px,0)}
+    to{opacity:1;transform:translate3d(0,0,0)}
+  }
+  @-webkit-keyframes mobileFinalLineIn{
+    from{opacity:0;-webkit-transform:translate3d(0,20px,0)}
+    to{opacity:1;-webkit-transform:translate3d(0,0,0)}
+  }
+}
+
+
 /* ---------- editor ---------- */
 #eb{position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:40;display:flex;align-items:center;gap:8px;min-height:46px;border:1px solid var(--line);border-radius:99px;background:rgba(28,18,16,.6);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:0 18px;font:400 13px var(--sans);letter-spacing:.12em;cursor:pointer;transition:transform .4s var(--e),box-shadow .4s;opacity:0;pointer-events:none}
 body.open #eb{opacity:1;pointer-events:auto;transition:opacity 1s ease 2.6s,transform .4s var(--e)}
@@ -609,6 +665,51 @@ try{
 }catch(e){S={...D}};
 const save=()=>{try{localStorage.setItem(STORAGE_KEY,JSON.stringify(S))}catch(e){alert('Storage is full — remove a photo or two.')}};
 let shown=0,wishSeen=false,typeTok=0;
+
+/* ---------- replayable mobile text animations ---------- */
+const mobileSlideVisible={noteS:false,finS:false};
+function forceReflow(el){if(el)void el.offsetWidth;}
+function resetMobileNoteText(){
+  const sec=$('#noteS'),paper=$('#paper'),lines=$$('#noteTxt .ln'),sg=paper?.querySelector('.sg');
+  if(!sec)return;
+  sec.classList.remove('mobile-note-motion','note-ready');
+  paper?.classList.remove('done');
+  lines.forEach(el=>{
+    el.style.removeProperty('opacity');
+    el.style.removeProperty('transform');
+    el.style.removeProperty('animation');
+    el.style.removeProperty('-webkit-animation');
+  });
+  if(sg){sg.style.removeProperty('opacity');sg.style.removeProperty('animation');sg.style.removeProperty('-webkit-animation');}
+}
+function replayMobileNoteText(){
+  const sec=$('#noteS'),paper=$('#paper'),lines=$$('#noteTxt .ln');
+  if(!sec||!paper||!lines.length)return;
+  resetMobileNoteText();
+  paper.style.setProperty('--note-lines',lines.length);
+  forceReflow(sec);
+  // Two frames make Safari/Chrome mobile reliably register a fresh animation.
+  requestAnimationFrame(()=>requestAnimationFrame(()=>sec.classList.add('mobile-note-motion')));
+}
+function resetMobileFinalText(){
+  const sec=$('#finS'); if(!sec)return;
+  sec.classList.remove('mobile-final-motion');
+  $$('.fin .fx1,.fin .fx2,.fin .fx3').forEach(el=>{
+    el.style.removeProperty('opacity');
+    el.style.removeProperty('transform');
+    el.style.removeProperty('animation');
+    el.style.removeProperty('-webkit-animation');
+  });
+}
+function replayMobileFinalText(){
+  const sec=$('#finS'); if(!sec)return;
+  resetMobileFinalText();
+  const els=[sec.querySelector('.fx1'),sec.querySelector('.fx2'),sec.querySelector('.fx3')].filter(Boolean);
+  els.forEach((el,i)=>el.style.setProperty('--mobile-final-delay',[.35,1.35,2.45][i]+'s'));
+  forceReflow(sec);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>sec.classList.add('mobile-final-motion')));
+}
+
 /* ---------- reveal observers ---------- */
 const slideBg={
   noteS: noteBgAudio,
@@ -650,17 +751,24 @@ function queueSlideBgSync(){
 }
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.2,rootMargin:'0px 0px -6% 0px'});
 const so=new IntersectionObserver(es=>es.forEach(e=>{
-  const t=e.target;
-  if(t.id==='finS'){
+  const t=e.target, id=t.id, entering=e.isIntersecting && !mobileSlideVisible[id], leaving=!e.isIntersecting && !!mobileSlideVisible[id];
+  if(id in mobileSlideVisible) mobileSlideVisible[id]=e.isIntersecting;
+  if(id==='finS'){
     t.classList.toggle('vis',e.isIntersecting);
-    if(e.isIntersecting){
+    if(entering){
+      replayMobileFinalText();
       document.body.classList.add('dark');
       if(!t._d){t._d=1;setTimeout(()=>{t.classList.add('end');document.body.classList.add('dark2')},8000)}
-    }else document.body.classList.remove('dark');
+    }else if(leaving){
+      resetMobileFinalText();
+      document.body.classList.remove('dark');
+    }
   }else if(e.isIntersecting){
     t.classList.add('vis');
-    if(t.id==='wishS')wishSeen=true;
-  }else if(t.id==='noteS'){
+    if(id==='noteS' && entering) replayMobileNoteText();
+    if(id==='wishS')wishSeen=true;
+  }else if(id==='noteS' && leaving){
+    resetMobileNoteText();
     // Do not let note music continue after leaving the note slide.
     try{noteBgAudio.pause();noteBgAudio.currentTime=0;}catch(e){}
   }
@@ -681,7 +789,7 @@ function render(){
  $('#hint').textContent=S.hint;$('#cnt').textContent=S.photos.length;
  $('#sT').textContent=S.songT;$('#sA').textContent=S.songA;$('#songLine').textContent=S.songL;
  const nt=$('#noteTxt');nt.innerHTML='';S.note.split('\n').forEach((t,i)=>{const p=document.createElement('span');p.className='ln';p.textContent=t||'\u00a0';p.style.setProperty('--i',Math.min(i,14));nt.append(p)});
- if($('#noteS').classList.contains('vis')){const delay=Math.min(12000,5200+Math.max(0,$$('#noteTxt .ln').length-12)*280);setTimeout(()=>$('#paper').classList.add('done'),delay); }
+ if($('#noteS').classList.contains('vis')){replayMobileNoteText();const delay=Math.min(12000,5200+Math.max(0,$$('#noteTxt .ln').length-12)*280);setTimeout(()=>$('#paper').classList.add('done'),delay); }
  const tl=$('#tl');tl.innerHTML='';S.wishes.split('\n').filter(x=>x.trim()).forEach(t=>{const d=document.createElement('div');d.className='w rv';d.innerHTML='<i class="orn"></i><p></p>';d.querySelector('p').textContent=t;tl.append(d)});
  obsWishes();shown=Math.min(shown,S.photos.length);drawGrid(true);
 }
