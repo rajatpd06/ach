@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1c1210">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
 <title>A surprise is waiting for you</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500&family=Caveat:wght@500&display=swap">
 <style>
@@ -289,6 +293,95 @@ body.open #eb{opacity:1;pointer-events:auto;transition:opacity 1s ease 2.6s,tran
 .fin{transition:none}
 .fin::before{transition:none}.fin.vis{background:#4b1426}.fin.vis::before{opacity:1}
 }
+
+/* ---------- mobile / touch polish ---------- */
+html,body{width:100%;max-width:100%;min-width:0}
+img,svg,video,canvas{max-width:100%}
+button,input,textarea{font-size:16px}
+@supports (height:100dvh){section{min-height:100dvh}.fin{min-height:110dvh}}
+@media (max-width:699px){
+  section{min-height:100svh;padding:76px 16px 82px;overflow:hidden}
+  #hero{padding-left:14px;padding-right:14px}
+  .eyebrow{font-size:10px;letter-spacing:.22em}
+  h2{font-size:clamp(31px,9vw,44px);max-width:94vw}
+  .hi{font-size:clamp(22px,6vw,30px)}
+  .name{font-size:clamp(58px,18vw,92px);max-width:96vw;overflow-wrap:anywhere}
+  .lead{font-size:14px;line-height:1.75;max-width:92vw}
+  .cta{margin-top:22px;padding:15px 30px;min-height:50px;letter-spacing:.24em}
+
+  /* Password screen */
+  #lock{padding:env(safe-area-inset-top,12px) 12px env(safe-area-inset-bottom,12px)}
+  .pad{width:min(340px,calc(100vw - 28px));padding:28px 18px 24px;border-radius:26px}
+  .pad h1{font-size:30px}
+  .bd-banner{min-width:0;width:100%;padding:8px 10px;font-size:11px;letter-spacing:.14em;gap:6px}
+  .lock-deco{inset:-42px -30px -34px}
+  .dots{gap:12px;margin-bottom:17px}
+  .keys{gap:9px 7px}
+  .keys button{width:60px;height:60px;font-size:24px}
+
+  /* Memory/camera */
+  .stage{width:190px;height:174px;margin:20px 0 4px}
+  #cam{width:116px;height:116px}
+  #cam svg{width:52px;height:52px}
+  .grid{width:100%;max-width:100%;gap:12px;padding:0 2px;margin-top:18px}
+  .pol{width:calc(50% - 7px);max-width:170px;padding:7px 7px 10px}
+  .pol p{font-size:16px;margin-top:7px}
+
+  /* Cake / touch drag */
+  .cake{width:min(250px,84vw);height:min(260px,82vw);margin:22px auto 6px}
+  .cake svg{max-width:none}
+  #cakeS .small{max-width:290px;line-height:1.6}
+
+  /* Song player */
+  .song{width:min(430px,calc(100vw - 28px));padding:22px 16px;border-radius:24px}
+  .pl{gap:10px;margin-top:16px}
+  .art{width:62px;height:62px}
+  .tx b{font-size:20px}
+  .tx small{font-size:12px}
+  #play{width:50px;height:50px}
+  .eq{display:none}
+
+  /* Note */
+  .env{width:min(180px,52vw);height:min(112px,34vw);margin-top:12px}
+  .paper{width:min(520px,calc(100vw - 28px));margin-top:-28px;padding:28px 19px 22px}
+  .dear{font-size:26px}
+  .ln{font-size:clamp(17px,4.7vw,20px);line-height:1.8;overflow-wrap:anywhere}
+  .sg{font-size:24px}
+
+  /* Wishes */
+  .tl{width:100%;max-width:calc(100vw - 28px);margin-top:18px}
+  .w{margin-left:28px;margin-bottom:18px;padding:15px 15px}
+  .w::after{left:-24px;width:9px;height:9px;top:22px}
+  .tl::before,.tl::after{left:8px}
+  .w p{font-size:19px;line-height:1.38}
+
+  /* Final */
+  .fin{padding:74px 18px calc(82px + env(safe-area-inset-bottom,0px));min-height:100svh}
+  .fin h2{font-size:clamp(39px,12.5vw,64px);max-width:94vw}
+  .fin .lead{max-width:90vw;font-size:14px}
+  .fin .hi{font-size:21px}
+
+  /* Editor / lightbox */
+  #eb{right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));min-height:44px;padding:0 15px;font-size:12px}
+  #ed{width:100vw;max-width:100vw;border-left:0;border-top:1px solid var(--line);padding-left:16px;padding-right:16px}
+  #lb{padding:12px}
+  #lb .pol{width:min(360px,94vw)}
+}
+@media (max-width:380px){
+  section{padding-left:12px;padding-right:12px}
+  .pad{padding-left:15px;padding-right:15px}
+  .keys button{width:56px;height:56px}
+  .lock-deco{display:none}
+  .page-banner{font-size:clamp(39px,13.5vw,58px)}
+  .banner-decor{font-size:25px;gap:7px}
+  .pol{width:calc(50% - 6px)}
+  .paper{padding-left:16px;padding-right:16px}
+  .ln{font-size:17px}
+}
+@media (hover:none){
+  .cta:hover,#cam:hover,#play:hover,#eb:hover,.keys button:hover{transform:none;box-shadow:none}
+}
+@media (prefers-reduced-motion:reduce){scroll-behavior:auto}
 </style>
 </head>
 <body class="locked">
