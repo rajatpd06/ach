@@ -438,6 +438,9 @@ button,input,textarea{font-size:16px}
   .cta:hover,#cam:hover,#play:hover,#eb:hover,.keys button:hover{transform:none;box-shadow:none}
 }
 @media (prefers-reduced-motion:reduce){scroll-behavior:auto}
+
+/* Final presentation mode: hide the editor trigger. */
+#eb{display:none!important}
 </style>
 </head>
 <body class="locked">
@@ -550,7 +553,6 @@ button,input,textarea{font-size:16px}
 </main>
 
 <div id="lb"></div>
-<button id="eb"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>Edit</button>
 <div id="edBg"></div>
 <aside id="ed" aria-label="Editor">
 <h3>Customize your website</h3>
@@ -797,7 +799,7 @@ function drawGrid(all){
  const g=$('#grid');g.innerHTML='';typeTok++;
  S.photos.slice(0,shown).forEach((p,i)=>{const d=document.createElement('div'),last=!all&&i===shown-1;d.className='pol'+(last?' new':'');d.style.setProperty('--r',(i%2?1:-1)*(2+i%3*2)+'deg');d.innerHTML='<img alt=""><p></p>';d.querySelector('img').src=p.src;
   const cp=d.querySelector('p');if(last)typeWrite(cp,p.cap);else cp.textContent=p.cap;d.onclick=()=>zoom(p);g.append(d)});
- const n=S.photos.length-shown;$('#left').textContent=!S.photos.length?'Add photos with the Edit button':n>0?`Tap the camera · ${n} ${n==1?'memory':'memories'} left`:'every memory revealed';
+ const n=S.photos.length-shown;$('#left').textContent=!S.photos.length?'Add photos in the editor':n>0?`Tap the camera · ${n} ${n==1?'memory':'memories'} left`:'every memory revealed';
 }
 function typeWrite(el,t){const k=typeTok;el.textContent='';let i=0;setTimeout(function f(){if(k!==typeTok)return;if(i<t.length){el.textContent=t.slice(0,++i);setTimeout(f,45)}},900)}
 $('#cam').onclick=()=>{if(shown>=S.photos.length)return;playCameraSfx();const c=$('#cam');c.classList.remove('push');void c.offsetWidth;c.classList.add('push');
