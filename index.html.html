@@ -671,45 +671,63 @@ let shown=0,wishSeen=false,typeTok=0;
 /* ---------- replayable mobile text animations ---------- */
 const mobileSlideVisible={noteS:false,finS:false};
 function forceReflow(el){if(el)void el.offsetWidth;}
+function cancelElementAnimations(el){
+  try{if(el&&el.getAnimations)el.getAnimations().forEach(a=>a.cancel())}catch(e){}
+}
+function animateMobileText(el,delay,duration=900,dy=18){
+  if(!el)return;
+  cancelElementAnimations(el);
+  el.style.opacity='0';
+  el.style.transform=`translate3d(0,${dy}px,0)`;
+  if(typeof el.animate==='function'){
+    const a=el.animate(
+      [{opacity:0,transform:`translate3d(0,${dy}px,0)`},{opacity:1,transform:'translate3d(0,0,0)'}],
+      {duration,delay,easing:'cubic-bezier(.22,.8,.2,1)',fill:'forwards'}
+    );
+    a.onfinish=()=>{el.style.opacity='1';el.style.transform='none'};
+  }else{
+    el.style.transition=`opacity ${duration}ms cubic-bezier(.22,.8,.2,1), transform ${duration}ms cubic-bezier(.22,.8,.2,1)`;
+    setTimeout(()=>{el.style.opacity='1';el.style.transform='none'},delay);
+  }
+}
 function resetMobileNoteText(){
   const sec=$('#noteS'),paper=$('#paper'),lines=$$('#noteTxt .ln'),sg=paper?.querySelector('.sg');
   if(!sec)return;
   sec.classList.remove('mobile-note-motion','note-ready');
   paper?.classList.remove('done');
-  lines.forEach(el=>{
-    el.style.removeProperty('opacity');
-    el.style.removeProperty('transform');
-    el.style.removeProperty('animation');
-    el.style.removeProperty('-webkit-animation');
-  });
-  if(sg){sg.style.removeProperty('opacity');sg.style.removeProperty('animation');sg.style.removeProperty('-webkit-animation');}
+  lines.forEach(el=>{cancelElementAnimations(el);el.style.removeProperty('opacity');el.style.removeProperty('transform');el.style.removeProperty('transition');el.style.removeProperty('animation');el.style.removeProperty('-webkit-animation')});
+  if(sg){cancelElementAnimations(sg);sg.style.removeProperty('opacity');sg.style.removeProperty('transform');sg.style.removeProperty('transition');sg.style.removeProperty('animation');sg.style.removeProperty('-webkit-animation')}
 }
 function replayMobileNoteText(){
-  const sec=$('#noteS'),paper=$('#paper'),lines=$$('#noteTxt .ln');
+  const sec=$('#noteS'),paper=$('#paper'),lines=$$('#noteTxt .ln'),sg=paper?.querySelector('.sg');
   if(!sec||!paper||!lines.length)return;
   resetMobileNoteText();
   paper.style.setProperty('--note-lines',lines.length);
   forceReflow(sec);
-  // Two frames make Safari/Chrome mobile reliably register a fresh animation.
-  requestAnimationFrame(()=>requestAnimationFrame(()=>sec.classList.add('mobile-note-motion')));
+  requestAnimationFrame(()=>{
+    lines.forEach((el,i)=>animateMobileText(el,180+i*260,820,14));
+    if(sg)animateMobileText(sg,180+lines.length*260,900,12);
+    sec.classList.add('mobile-note-motion');
+  });
 }
 function resetMobileFinalText(){
   const sec=$('#finS'); if(!sec)return;
   sec.classList.remove('mobile-final-motion');
-  $$('.fin .fx1,.fin .fx2,.fin .fx3').forEach(el=>{
-    el.style.removeProperty('opacity');
-    el.style.removeProperty('transform');
-    el.style.removeProperty('animation');
-    el.style.removeProperty('-webkit-animation');
-  });
+  $$('.fin .fx1,.fin .fx2,.fin .fx3').forEach(el=>{cancelElementAnimations(el);el.style.removeProperty('opacity');el.style.removeProperty('transform');el.style.removeProperty('transition');el.style.removeProperty('animation');el.style.removeProperty('-webkit-animation')});
 }
 function replayMobileFinalText(){
   const sec=$('#finS'); if(!sec)return;
   resetMobileFinalText();
   const els=[sec.querySelector('.fx1'),sec.querySelector('.fx2'),sec.querySelector('.fx3')].filter(Boolean);
-  els.forEach((el,i)=>el.style.setProperty('--mobile-final-delay',[.35,1.35,2.45][i]+'s'));
   forceReflow(sec);
-  requestAnimationFrame(()=>requestAnimationFrame(()=>sec.classList.add('mobile-final-motion')));
+  requestAnimationFrame(()=>{
+    els.forEach((el,i)=>{
+      const d=[350,1350,2450][i];
+      el.style.setProperty('--mobile-final-delay',(d/1000)+'s');
+      animateMobileText(el,d,950,20);
+    });
+    sec.classList.add('mobile-final-motion');
+  });
 }
 
 /* ---------- reveal observers ---------- */
